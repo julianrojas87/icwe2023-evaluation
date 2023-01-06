@@ -1,0 +1,17 @@
+{
+  "name": "query-generator",
+  "version": "0.1.0",
+  "description": "Script to generate random shortest path queries over a given network graph",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Julian Rojas",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^9.4.1",
+    "tiles-planner": "github:julianrojas87/tiles-planner#icwe2023",
+    "wellknown": "^0.5.0"
+  }
+}
