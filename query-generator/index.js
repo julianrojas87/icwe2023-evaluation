@@ -40,7 +40,7 @@ async function run() {
                     sp.path.forEach(n => {
                         delete n.nextNodes;
                         delete n.prevNodes;
-                        delete caches.cost;
+                        delete n.cost;
                     });
                     sp.from = sp.path[0];
                     sp.to = sp.path[sp.path.length - 1];
