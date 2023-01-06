@@ -17,6 +17,7 @@ async function run() {
     const maxRank = parseInt(program.opts().maxRank);
     const queryAmount = parseInt(program.opts().queryAmount);
     const index = new Map(JSON.parse(await fsPromise.readFile(program.opts().index)));
+    // Use a Dijkstra planner 
     const planner = new Dijkstra({
         tilesBaseURL: program.opts().tiles,
         zoom: 12,
@@ -39,6 +40,8 @@ async function run() {
                         delete n.nextNodes;
                         delete n.prevNodes;
                     });
+                    sp.from = sp.path[0].id;
+                    sp.to = sp.path[sp.path.length - 1].id;
                     await fsPromise.appendFile(output, JSON.stringify(sp) + "\n", "utf-8");
                 } else {
                     j--;
