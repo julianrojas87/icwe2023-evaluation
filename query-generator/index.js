@@ -32,16 +32,19 @@ async function run() {
         for (let j = 0; j < queryAmount; j++) {
             const randomNode = index.get(getRandomKey(index));
             randomNode.coordinates = wktParse(randomNode.wkt).coordinates;
+
             try {
                 const sp = await planner.findPath(randomNode, undefined, DijkstraRank);
                 if (sp) {
-                    // clean up path
+                    // Clean up and complement query and result
                     sp.path.forEach(n => {
                         delete n.nextNodes;
                         delete n.prevNodes;
                     });
-                    sp.from = sp.path[0].id;
-                    sp.to = sp.path[sp.path.length - 1].id;
+                    sp.from = index.get(sp.path[0].id);
+                    sp.to = index.get(sp.path[sp.path.length - 1].id);
+                    sp.to.coordinates = wktParse(sp.to.wkt).coordinates
+
                     await fsPromise.appendFile(output, JSON.stringify(sp) + "\n", "utf-8");
                 } else {
                     j--;
