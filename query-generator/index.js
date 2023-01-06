@@ -40,10 +40,10 @@ async function run() {
                     sp.path.forEach(n => {
                         delete n.nextNodes;
                         delete n.prevNodes;
+                        delete caches.cost;
                     });
-                    sp.from = index.get(sp.path[0].id);
-                    sp.to = index.get(sp.path[sp.path.length - 1].id);
-                    sp.to.coordinates = wktParse(sp.to.wkt).coordinates
+                    sp.from = sp.path[0];
+                    sp.to = sp.path[sp.path.length - 1];
 
                     await fsPromise.appendFile(output, JSON.stringify(sp) + "\n", "utf-8");
                 } else {
