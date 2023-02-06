@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Download ERA KG
-if [ ! -f server/graphdb-10.1.3-dist.zip ]
+if [ ! -f data/era-kg_04-02-2023.nt.gz ]
 then
     mkdir data
     cd data
