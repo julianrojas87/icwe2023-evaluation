@@ -6,6 +6,7 @@ then
     mkdir data
     cd data
     wget -O era-kg_04-02-2023.nt.gz https://cloud.ilabt.imec.be/index.php/s/BMa4rdDoE4jKMq2/download/era-kg_04-02-2023.nt.gz
+    echo "http://data.europa.eu/949/graph/rinf" > global.graph
     cd ..
 fi
 
