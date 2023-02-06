@@ -1,7 +1,12 @@
 #!/bin/bash
 
-git clone https://github.com/julianrojas87/tiles-interface.git source-code
-cd source-code
-git checkout icwe2023
+if [ ! -f source-code ]
+then
+    git clone https://github.com/julianrojas87/tiles-interface.git source-code
+    cd source-code
+    git checkout icwe2023
+    cd ..
+fi
 
-sudo docker-compose up -d
+cd source-code
+sudo docker-compose up --build -d
