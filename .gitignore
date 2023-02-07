@@ -1,3 +1,4 @@
 node_modules
 *.gz
 *.zip
+!random-queries_5-18.json.gz

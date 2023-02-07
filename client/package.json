@@ -1,0 +1,18 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "description": "Scalability test client app",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Julián Rojas",
+  "license": "MIT",
+  "dependencies": {
+    "autocannon": "^7.10.0",
+    "commander": "^10.0.0",
+    "tiles-planner": "github:julianrojas87/tiles-planner#icwe2023",
+    "undici": "^5.18.0"
+  }
+}
