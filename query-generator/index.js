@@ -1,13 +1,13 @@
 import { Command } from "commander";
 import fsPromise from "fs/promises";
 import path from "path";
+import { gunzip } from "zlib";
 import { parse as wktParse } from 'wellknown';
 import { Dijkstra } from "tiles-planner";
 
 async function run() {
     const program = new Command()
         .requiredOption("--tiles <tiles>", "Tile interface URL")
-        .requiredOption("-i, --index <index>", "Path to local location index")
         .requiredOption("-o, --output <output>", "File path where the output will be stored")
         .option("--max-rank <maxRank>", "Maximum k for Dijkstra ranks DR=2^k (default: k=20)", 20)
         .option("--query-amount <queryAmount>", "Number of queries per rank (default: 10)", 10)
@@ -16,7 +16,8 @@ async function run() {
     const output = path.resolve(program.opts().output);
     const maxRank = parseInt(program.opts().maxRank);
     const queryAmount = parseInt(program.opts().queryAmount);
-    const index = new Map(JSON.parse(await fsPromise.readFile(program.opts().index)));
+    const index = await loadIndex();
+    
     // Use a Dijkstra planner 
     const planner = new Dijkstra({
         tilesBaseURL: program.opts().tiles,
@@ -56,6 +57,30 @@ async function run() {
             }
         }
     }
+}
+
+/**
+ * 
+ * TODO: Remove hardcoded dependency on SPARQL-based index
+ */
+function loadIndex() {
+    return new Promise(async (resolve, reject) => {
+        const index = new Map();
+        const file = await fsPromise.readFile(path.resolve("./era-index.json.gz"));
+        gunzip(file, (err, buffer) => {
+            if(err) reject(err);
+            const rawIndex = JSON.parse(buffer.toString("utf8"));
+            rawIndex.results.bindings.forEach(res => {
+                index.set(res.id.value, {
+                    id: res.id.value,
+                    label: res.label.value,
+                    wkt: res.wkt.value
+                });
+            });
+
+            resolve(index);
+        });
+    });
 }
 
 function getRandomKey(collection) {
