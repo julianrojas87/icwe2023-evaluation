@@ -15,12 +15,12 @@ http.createServer((req, res) => {
             if(!fs.existsSync(`../graph-database/${server}/results`)) {
                 fs.mkdirSync(`../graph-database/${server}/results`);
             }
-            exec(`sudo recordstats.sh > ../graph-database/${server}/results/${concurrency}.csv`);
+            exec(`sudo ./recordstats.sh > ../graph-database/${server}/results/${concurrency}.csv`);
         } else {
             if(!fs.existsSync(`../tiles-interface/results`)) {
                 fs.mkdirSync(`../tiles-interface/results`);
             }
-            exec(`sudo recordstats.sh > ../tiles-interface/results/${concurrency}.csv`);
+            exec(`sudo ./recordstats.sh > ../tiles-interface/results/${concurrency}.csv`);
         }
     }
 
