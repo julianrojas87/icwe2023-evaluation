@@ -11,7 +11,7 @@ http.createServer((req, res) => {
     const concurrency = urlObj.searchParams.get('concurrency');
 
     if (command === 'start') {
-        if(module === 'gbd') {
+        if(module === 'gdb') {
             if(!fs.existsSync(`../graph-database/${server}/results`)) {
                 fs.mkdirSync(`../graph-database/${server}/results`);
             }
