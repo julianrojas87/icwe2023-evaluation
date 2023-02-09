@@ -27,13 +27,14 @@ async function run() {
         if (!cache) planner.NG = new NetworkGraph();
 
         // Run each query
+        let j = 0;
         for (const q of querySet) {
             try {
                 const sp = await planner.findPath(q.from, q.to);
                 if(!sp) throw new Error("No path found");
-
+                j++;
             } catch (err) {
-                console.error(q.from, q.metadata);
+                console.error(j, q.from, q.metadata);
                 //throw err;
             }
         }
