@@ -12,6 +12,7 @@
   "dependencies": {
     "autocannon": "^7.10.0",
     "commander": "^10.0.0",
+    "stream-json": "^1.7.5",
     "tiles-planner": "github:julianrojas87/tiles-planner#icwe2023",
     "undici": "^5.18.0"
   }

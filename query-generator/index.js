@@ -9,11 +9,13 @@ async function run() {
     const program = new Command()
         .requiredOption("--tiles <tiles>", "Tile interface URL")
         .requiredOption("-o, --output <output>", "File path where the output will be stored")
-        .option("--max-rank <maxRank>", "Maximum k for Dijkstra ranks DR=2^k (default: k=20)", 20)
+        .option("--min-rank <minRank>", "Minimum k for Dijkstra ranks DR=2^k (default: k=5)", 5)
+        .option("--max-rank <maxRank>", "Maximum k for Dijkstra ranks DR=2^k (default: k=20)", 19)
         .option("--query-amount <queryAmount>", "Number of queries per rank (default: 10)", 10)
         .parse(process.argv);
 
     const output = path.resolve(program.opts().output);
+    const minRank = parseInt(program.opts().minRank);
     const maxRank = parseInt(program.opts().maxRank);
     const queryAmount = parseInt(program.opts().queryAmount);
     const index = await loadIndex();
@@ -26,7 +28,7 @@ async function run() {
     });
 
     // Generate random queries for Dijkstra ranks given by 
-    for (let i = 5; i < maxRank; i++) {
+    for (let i = minRank; i < maxRank; i++) {
         const DijkstraRank = Math.pow(2, i);
         console.log("Dijkstra Rank: ", DijkstraRank);
 
