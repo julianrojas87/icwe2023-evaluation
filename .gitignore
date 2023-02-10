@@ -1,6 +1,9 @@
 node_modules
 *.gz
 *.zip
+graph-database/graphdb/data
+graph-database/stardog/home
 !era-index.json.gz
 !random-queries_5-17.json.gz
-!request.log.gz
+!requests.log.gz
+!graph-database/stardog/home/stardog-license-key.bin
