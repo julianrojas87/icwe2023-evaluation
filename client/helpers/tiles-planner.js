@@ -17,8 +17,7 @@ async function run() {
         zoom,
         tilesBaseURL: ti,
         distance: (node) => { return node.cost },
-        heuristic: Utils.harvesineDistance,
-        disableCache
+        heuristic: Utils.harvesineDistance
     });
 
     // Execute the query set <iterations> times
@@ -30,8 +29,11 @@ async function run() {
                 const sp = await planner.findPath(q.from, q.to);
                 if (!sp) throw new Error("No path found");
                 j++;
-                // Clean up in-memory network graph if cache is disabled
-                if (disableCache) planner.NG = new NetworkGraph();
+                // Clean up in-memory network graph and tiles cache if cache is disabled
+                if (disableCache) {
+                    planner.NG = new NetworkGraph();
+                    planner.tileCache = new Set();
+                }
             } catch (err) {
                 console.error(j, q.from, q.metadata);
                 //throw err;
