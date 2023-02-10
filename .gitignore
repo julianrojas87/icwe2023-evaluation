@@ -2,4 +2,5 @@ node_modules
 *.gz
 *.zip
 !era-index.json.gz
-!random-queries_5-18.json.gz
+!random-queries_5-17.json.gz
+!request.log.gz

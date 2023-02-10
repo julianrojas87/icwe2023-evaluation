@@ -2,6 +2,7 @@ import { Command } from "commander";
 import fs from "fs";
 import path from "path";
 import { createGunzip } from "zlib";
+import readline from "readline";
 import jsonlParser from "stream-json/jsonl/Parser.js";
 import { fetch as nodeFetch } from "undici";
 import { Worker } from "worker_threads";
@@ -9,6 +10,10 @@ import { Worker } from "worker_threads";
 // Handle older Node.js versions (<18)
 if (typeof fetch === "undefined") fetch = nodeFetch;
 
+// Query set
+const RANDOM_QUERY_SET = "../random-queries_5-17.json.gz";
+// HTTP request log
+const REQUEST_LOG = "../request.log.gz";
 // Amount of concurrent clients
 const CLIENTS = [1, 2, 4, 8, 16, 32, 64, 128];
 // Valid Graph Storage types
@@ -42,7 +47,7 @@ async function run() {
 
     // Load the query set
     const querySet = await loadQuerySet();
-    // Assemble the set of HTTP requests that autocannon will execute
+    // Load the set of HTTP requests that autocannon will execute as a Tiles Planner would do
     const httpReqs = await loadHttpReqs();
 
     // Main experiment loop
@@ -53,7 +58,7 @@ async function run() {
             if (program.opts().tiAddress) {
                 await toggleRecording({
                     record: true,
-                    server: program.opts().tiAdress,
+                    server: program.opts().tiAddress,
                     module: "tiles",
                     test: program.opts().test,
                     clients: i
@@ -84,18 +89,30 @@ async function run() {
 function loadQuerySet() {
     return new Promise((resolve, reject) => {
         const set = [];
-        fs.createReadStream(path.resolve("../random-queries_5-18.json.gz"))
+        fs.createReadStream(path.resolve(RANDOM_QUERY_SET))
             .pipe(createGunzip())
             .pipe(jsonlParser.parser())
             .on("data", q => {
                 set.push(q.value);
             })
+            .on("error", err => reject(err))
             .on("end", () => resolve(set));
     });
 }
 
 function loadHttpReqs() {
-
+    return new Promise((resolve, reject) => {
+        const reqs = [];
+        readline.createInterface({
+            input: fs.createReadStream(path.resolve(REQUEST_LOG)).pipe(createGunzip()),
+        })
+        .on("line", line => {
+            if(line.startsWith("http")) {
+                reqs.push(line);
+            }
+        }).on("close", () => resolve(reqs))
+        .on("error", err => reject(err));
+    });
 }
 
 async function toggleRecording({ record, server, module, test, clients }) {

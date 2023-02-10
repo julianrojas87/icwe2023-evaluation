@@ -27,10 +27,6 @@ async function run() {
         let j = 0;
         for (const q of querySet) {
             try {
-                if (j < 736) {
-                    j++;
-                    continue;
-                }
                 const sp = await planner.findPath(q.from, q.to);
                 if (!sp) throw new Error("No path found");
                 j++;
