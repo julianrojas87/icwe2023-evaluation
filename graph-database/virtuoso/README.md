@@ -1,3 +1,7 @@
+# Install and run Virtuoso
+
+1. Execute the `./start-virtuoso.sh` script from this folder.
+
 # Importing data into Virtuoso
 
 1. Go to Virtuoso conductor: `http://virtuoso_ip_address:8890/conductor` and Login with DBA credentials. Then go to `Database/Interactive SQL` menu option.

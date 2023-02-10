@@ -1,3 +1,7 @@
+# Install and run Stardog
+
+1. Execute the `./start-stardog.sh` script from this folder.
+
 # Importing data into Stardog
 
 1. Execute the following command to load the ERA KG into a running Stardog instance:

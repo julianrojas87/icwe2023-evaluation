@@ -1,3 +1,7 @@
+# Install and run GraphDB
+
+1. Execute the `./start-graphdb.sh` script from this folder.
+
 # Importing data into GraphDB
 
 1. Go to `http://graphdb_ip_address:7200` and create a new repository in `Setup/Repositories`.
