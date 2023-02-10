@@ -6,7 +6,7 @@ async function run() {
         gsType,
         ti,
         zoom,
-        cache,
+        disableCache,
         querySet,
         iterations
     } = workerData;
@@ -18,21 +18,24 @@ async function run() {
         tilesBaseURL: ti,
         distance: (node) => { return node.cost },
         heuristic: Utils.harvesineDistance,
-        disableCache: cache
+        disableCache
     });
 
     // Execute the query set <iterations> times
     for (let i = 0; i < iterations; i++) {
-        // Clean up in-memory network graph if cache is disabled
-        if (!cache) planner.NG = new NetworkGraph();
-
         // Run each query
         let j = 0;
         for (const q of querySet) {
             try {
+                if (j < 736) {
+                    j++;
+                    continue;
+                }
                 const sp = await planner.findPath(q.from, q.to);
-                if(!sp) throw new Error("No path found");
+                if (!sp) throw new Error("No path found");
                 j++;
+                // Clean up in-memory network graph if cache is disabled
+                if (disableCache) planner.NG = new NetworkGraph();
             } catch (err) {
                 console.error(j, q.from, q.metadata);
                 //throw err;

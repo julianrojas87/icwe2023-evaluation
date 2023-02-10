@@ -25,7 +25,7 @@ async function run() {
         .option("--ti-address <tiAddress>", "Tiles Interface server address (if any)")
         .option("--zoom <zoom>", "Zoom level to use on the Tiles Interface", 12)
         .option("--iterations <iterations>", "Number of repetitions of the query set", 1)
-        .option("--cache", "Use client-side cache")
+        .option("--disable-cache", "Disable client-side cache", false)
         .option("--record", "Flag to trigger stats recording")
         .parse(process.argv);
 
@@ -74,7 +74,7 @@ async function run() {
             gsType: program.opts().gsType,
             ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
             zoom: program.opts().zoom,
-            cache: program.opts().cache,
+            disableCache: program.opts().disableCache,
             iterations: program.opts().iterations,
             querySet
         });

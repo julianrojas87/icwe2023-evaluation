@@ -3,7 +3,7 @@ import fsPromise from "fs/promises";
 import path from "path";
 import { gunzip } from "zlib";
 import { parse as wktParse } from 'wellknown';
-import { Dijkstra } from "tiles-planner";
+import { Dijkstra, NBAStar, Utils } from "tiles-planner";
 
 async function run() {
     const program = new Command()
@@ -27,6 +27,14 @@ async function run() {
         distance: (node) => { return node.cost }
     });
 
+    // Have a NBA* planner for verification
+    const biPlanner = new NBAStar({
+        tilesBaseURL: program.opts().tiles,
+        zoom: 12,
+        distance: (node) => { return node.cost },
+        heuristic: Utils.harvesineDistance 
+    });
+
     // Generate random queries for Dijkstra ranks given by 
     for (let i = minRank; i < maxRank; i++) {
         const DijkstraRank = Math.pow(2, i);
@@ -48,6 +56,9 @@ async function run() {
                     sp.from = sp.path[0];
                     sp.to = sp.path[sp.path.length - 1];
 
+                    // Verify route
+                    console.log("Verifying route...")
+                    await biPlanner.findPath(sp.from, sp.to);
                     await fsPromise.appendFile(output, JSON.stringify(sp) + "\n", "utf-8");
                 } else {
                     j--;
