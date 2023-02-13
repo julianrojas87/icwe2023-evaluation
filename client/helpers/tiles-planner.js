@@ -59,8 +59,7 @@ async function run() {
                     planner.tileCache = new Set();
                 }
             } catch (err) {
-                console.error(j, q);
-                console.error(err);
+                console.error(j, err);
             }
         }
     }
