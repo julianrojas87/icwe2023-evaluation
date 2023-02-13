@@ -21,12 +21,12 @@ async function run() {
     });
 
     // Object that will hold all the measurements
-    const results = { 
+    const results = {
         globals: {
             fullAvgResTime: 0,
             dijkstraRanks: {}
-        }, 
-        queryResults: [] 
+        },
+        queryResults: []
     };
 
     // Execute the query set <iterations> times
@@ -36,13 +36,13 @@ async function run() {
             try {
                 console.log(`Q${j}`);
                 const sp = await planner.findPath(q.from, q.to);
-                
+
                 // Something went wrong with this query
                 if (!sp) throw new Error("No path found");
-                
+
                 const metadata = sp.metadata;
-                metadata.from = q.from,
-                metadata.to = q.to
+                metadata.from = q.from;
+                metadata.to = q.to;
                 // Keep original Dijkstra Rank 
                 metadata.dijkstraRank = q.metadata.dijkstraRank;
 
@@ -66,26 +66,28 @@ async function run() {
 
     // Aggregate results
     let total = 0;
-    for(const qr of results.queryResults) {
-        for (const r of qr) {
-            total++;
-            // Aggregate response times
-            results.globals.fullAvgResTime += r.executionTime;
-            // Aggregate response times per Dijkstra Rank
-            if(!results.globals.dijkstraRanks[r.dijkstraRank]) {
-                results.globals.dijkstraRanks[r.dijkstraRank] = { 
-                    count: 1, 
-                    avgResTime: r.executionTime,
-                    avgTransfBytes: r.byteCount,
-                    avgReqCount: r.requestCount,
-                    avgDistance: r.cost 
+    for (const qr of results.queryResults) {
+        if (qr) {
+            for (const r of qr) {
+                total++;
+                // Aggregate response times
+                results.globals.fullAvgResTime += r.executionTime;
+                // Aggregate response times per Dijkstra Rank
+                if (!results.globals.dijkstraRanks[r.dijkstraRank]) {
+                    results.globals.dijkstraRanks[r.dijkstraRank] = {
+                        count: 1,
+                        avgResTime: r.executionTime,
+                        avgTransfBytes: r.byteCount,
+                        avgReqCount: r.requestCount,
+                        avgDistance: r.cost
+                    }
+                } else {
+                    results.globals.dijkstraRanks[r.dijkstraRank].count++;
+                    results.globals.dijkstraRanks[r.dijkstraRank].avgResTime += r.executionTime;
+                    results.globals.dijkstraRanks[r.dijkstraRank].avgTransfBytes += r.byteCount;
+                    results.globals.dijkstraRanks[r.dijkstraRank].avgReqCount += r.requestCount;
+                    results.globals.dijkstraRanks[r.dijkstraRank].avgDistance += r.cost;
                 }
-            } else {
-                results.globals.dijkstraRanks[r.dijkstraRank].count++;
-                results.globals.dijkstraRanks[r.dijkstraRank].avgResTime += r.executionTime;
-                results.globals.dijkstraRanks[r.dijkstraRank].avgTransfBytes += r.byteCount;
-                results.globals.dijkstraRanks[r.dijkstraRank].avgReqCount += r.requestCount;
-                results.globals.dijkstraRanks[r.dijkstraRank].avgDistance += r.cost;
             }
         }
     }
@@ -98,7 +100,7 @@ async function run() {
         drObj.avgReqCount = drObj.avgReqCount / drObj.count;
         drObj.avgDistance = drObj.avgDistance / drObj.count;
     });
-    
+
     console.log(results.globals);
     // Send results back
     parentPort.postMessage(results);
