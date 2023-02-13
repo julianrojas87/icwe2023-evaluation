@@ -66,8 +66,10 @@ async function run() {
     }
 
     // Aggregate results
+    let total = 0;
     for(const qr of results.queryResults) {
         for (const r of qr) {
+            total++;
             // Aggregate response times
             results.globals.fullAvgResTime += r.executionTime;
             // Aggregate response times per Dijkstra Rank
@@ -89,7 +91,7 @@ async function run() {
         }
     }
     // Calculate averages
-    results.globals.fullAvgResTime = results.globals.fullAvgResTime / (querySet.length * iterations);
+    results.globals.fullAvgResTime = results.globals.fullAvgResTime / total;
     Object.keys(results.globals.dijkstraRanks).forEach(dr => {
         const drObj = results.globals.dijkstraRanks[dr];
         drObj.avgResTime = drObj.avgResTime / drObj.count;
