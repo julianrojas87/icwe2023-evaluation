@@ -6,7 +6,8 @@ async function run() {
         gsType,
         ti,
         zoom,
-        disableCache,
+        disableClientCache,
+        bypassServerCache,
         querySet,
         iterations
     } = workerData;
@@ -17,7 +18,8 @@ async function run() {
         zoom,
         tilesBaseURL: ti,
         distance: (node) => { return node.cost },
-        heuristic: Utils.harvesineDistance
+        heuristic: Utils.harvesineDistance,
+        bypassServerCache
     });
 
     // Object that will hold all the measurements
@@ -54,7 +56,7 @@ async function run() {
                 }
 
                 // Clean up in-memory network graph and tiles cache if cache is disabled
-                if (disableCache) {
+                if (disableClientCache) {
                     planner.NG = new NetworkGraph();
                     planner.tileCache = new Set();
                 }
@@ -79,6 +81,7 @@ async function run() {
                         avgResTime: r.executionTime,
                         avgTransfBytes: r.byteCount,
                         avgReqCount: r.requestCount,
+                        avgCacheHits: r.cacheHits,
                         avgDistance: r.cost
                     }
                 } else {
@@ -86,6 +89,7 @@ async function run() {
                     results.globals.dijkstraRanks[r.dijkstraRank].avgResTime += r.executionTime;
                     results.globals.dijkstraRanks[r.dijkstraRank].avgTransfBytes += r.byteCount;
                     results.globals.dijkstraRanks[r.dijkstraRank].avgReqCount += r.requestCount;
+                    results.globals.dijkstraRanks[r.dijkstraRank].avgCacheHits += r.cacheHits;
                     results.globals.dijkstraRanks[r.dijkstraRank].avgDistance += r.cost;
                 }
             }
@@ -98,6 +102,7 @@ async function run() {
         drObj.avgResTime = drObj.avgResTime / drObj.count;
         drObj.avgTransfBytes = drObj.avgTransfBytes / drObj.count;
         drObj.avgReqCount = drObj.avgReqCount / drObj.count;
+        drObj.avgCacheHits = drObj.avgCacheHits / drObj.count;
         drObj.avgDistance = drObj.avgDistance / drObj.count;
     });
 

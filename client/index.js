@@ -31,7 +31,8 @@ async function run() {
         .option("--ti-address <tiAddress>", "Tiles Interface server address (if any)")
         .option("--zoom <zoom>", "Zoom level to use on the Tiles Interface", 12)
         .option("--iterations <iterations>", "Number of repetitions of the query set", 1)
-        .option("--disable-cache", "Disable client-side cache", false)
+        .option("--disable-client-cache", "Disable client-side cache", false)
+        .option("--bypass-server-cache", "Bypass server-side cache", false)
         .option("--record", "Flag to trigger stats recording")
         .parse(process.argv);
 
@@ -47,7 +48,7 @@ async function run() {
     }
 
     // Load the query set
-    const querySet = (await loadQuerySet());
+    const querySet = (await loadQuerySet()).slice(0, 10);
     // Load the set of HTTP requests that autocannon will execute as a Tiles Planner would do
     const httpReqs = await loadHttpReqs();
 
@@ -60,7 +61,8 @@ async function run() {
                 gsType: program.opts().gsType,
                 ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
                 zoom: program.opts().zoom,
-                disableCache: program.opts().disableCache,
+                disableClientCache: program.opts().disableClientCache,
+                bypassServerCache: program.opts().bypassServerCache,
                 iterations: program.opts().iterations,
                 querySet
             });
@@ -69,10 +71,16 @@ async function run() {
             if (!fs.existsSync(path.resolve("./results"))) {
                 fs.mkdirSync(path.resolve("./results"));
             }
+
+            const fileName = "tiles_" 
+                + program.opts().gsType + "_"
+                + "zoom-" + program.opts().zoom + "_"
+                + (program.opts().disableClientCache ? "no-client-cache" : "client-cache") + "_"
+                + (program.opts().bypassServerCache ? "no-server-cache" : "server-cache")
+                + ".json";
+
             await fsPromise.writeFile(
-                path.resolve("./results/",
-                    `tiles_${program.opts().gsType}_${program.opts().disableCache ? "no-cache" : "cache"}.json`,
-                ),
+                path.resolve("./results/", fileName),
                 JSON.stringify(results, null, 3),
                 "utf8"
             );
@@ -111,7 +119,7 @@ async function run() {
                 gsType: program.opts().gsType,
                 ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
                 zoom: program.opts().zoom,
-                disableCache: program.opts().disableCache,
+                disableClientCache: program.opts().disableClientCache,
                 iterations: program.opts().iterations,
                 querySet
             });
