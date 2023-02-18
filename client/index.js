@@ -50,7 +50,7 @@ async function run() {
     }
 
     // Load the query set
-    const querySet = (await loadQuerySet()).slice(0, 5);
+    const querySet = (await loadQuerySet());
     // Load the set of HTTP requests that autocannon will execute as a Tiles Planner would do
     const httpReqs = await loadHttpReqs();
 
