@@ -21,6 +21,8 @@ const CLIENTS = [1, 2, 4, 8, 16, 32, 64, 128];
 const GRAPH_STORAGES = ["virtuoso", "graphdb", "osrm"];
 // Valid Tiles Interface types
 const TILES_INTERFACES = ["sparql", "cypher"];
+// Query timeout
+const TIMEOUT = 60000;
 
 async function run() {
     const program = new Command()
@@ -36,7 +38,6 @@ async function run() {
         .option("--record", "Flag to trigger stats recording")
         .parse(process.argv);
 
-    console.log(program.opts())
     // Validate Graph Storage type
     if (!GRAPH_STORAGES.includes(program.opts().gsType)) {
         console.error(`Unsupported Graph Storage ${program.opts().gsType}. Currently supported types: ${GRAPH_STORAGES}`);
@@ -49,7 +50,7 @@ async function run() {
     }
 
     // Load the query set
-    const querySet = (await loadQuerySet());
+    const querySet = (await loadQuerySet()).slice(0, 5);
     // Load the set of HTTP requests that autocannon will execute as a Tiles Planner would do
     const httpReqs = await loadHttpReqs();
 
@@ -65,6 +66,7 @@ async function run() {
                 disableClientCache: program.opts().disableClientCache,
                 bypassServerCache: program.opts().bypassServerCache,
                 iterations: program.opts().iterations,
+                timeout: TIMEOUT,
                 querySet
             });
 
@@ -122,6 +124,7 @@ async function run() {
                 zoom: program.opts().zoom,
                 disableClientCache: program.opts().disableClientCache,
                 iterations: program.opts().iterations,
+                timeout: TIMEOUT,
                 querySet
             });
         }

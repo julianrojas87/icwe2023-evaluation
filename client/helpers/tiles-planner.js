@@ -9,7 +9,8 @@ async function run() {
         disableClientCache,
         bypassServerCache,
         querySet,
-        iterations
+        iterations,
+        timeout
     } = workerData;
     console.log(`Starting Tiles Planner evaluation (using NBA*) over ${gsType}`);
 
@@ -26,6 +27,8 @@ async function run() {
     const results = {
         globals: {
             fullAvgResTime: 0,
+            fullAvgTransfBytes: 0,
+            totalTimeouts: 0,
             dijkstraRanks: {}
         },
         queryResults: []
@@ -37,10 +40,14 @@ async function run() {
         for (const [j, q] of querySet.entries()) {
             try {
                 console.log(`Q${j}`);
-                const sp = await planner.findPath(q.from, q.to);
+                // Execute query
+                const sp = await executeQuery(planner, q, timeout);
 
-                // Something went wrong with this query
-                if (!sp) throw new Error("No path found");
+                // Timeout reached
+                if (!sp) {
+                    results.globals.totalTimeouts++;
+                    continue;
+                }
 
                 const metadata = sp.metadata;
                 metadata.from = q.from;
@@ -74,6 +81,8 @@ async function run() {
                 total++;
                 // Aggregate response times
                 results.globals.fullAvgResTime += r.executionTime;
+                // Aggregate transferred bytes
+                results.globals.fullAvgTransfBytes += r.byteCount;
                 // Aggregate response times per Dijkstra Rank
                 if (!results.globals.dijkstraRanks[r.dijkstraRank]) {
                     results.globals.dijkstraRanks[r.dijkstraRank] = {
@@ -97,6 +106,9 @@ async function run() {
     }
     // Calculate averages
     results.globals.fullAvgResTime = results.globals.fullAvgResTime / total;
+    results.globals.fullAvgTransfBytes = results.globals.fullAvgTransfBytes / total;
+    results.globals.totalTimeouts = results.globals.totalTimeouts / iterations;
+    // Calculate averages per Dijkstra rank
     Object.keys(results.globals.dijkstraRanks).forEach(dr => {
         const drObj = results.globals.dijkstraRanks[dr];
         drObj.avgResTime = drObj.avgResTime / drObj.count;
@@ -109,6 +121,22 @@ async function run() {
     console.log(results.globals);
     // Send results back
     parentPort.postMessage(results);
+}
+
+function executeQuery(planner, q, timeout) {
+    return new Promise((resolve, reject) => {
+        // Set timeout
+        const limit = setTimeout(() => {
+            // Trigger kill switch
+            planner.killed = true;
+        }, timeout);
+
+        // Run query
+        planner.findPath(q.from, q.to).then(sp => {
+            if(limit) clearTimeout(limit);
+            resolve(sp);
+        }).catch(err => reject(err));
+    });
 }
 
 run();
