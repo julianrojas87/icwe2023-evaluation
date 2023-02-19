@@ -116,7 +116,7 @@ async function run() {
     // Calculate averages per Dijkstra rank
     Object.keys(results.globals.dijkstraRanks).forEach(dr => {
         const drObj = results.globals.dijkstraRanks[dr];
-        if (drObj > 0) {
+        if (drObj.count > 0) {
             drObj.avgResTime = drObj.avgResTime / drObj.count;
             drObj.avgTransfBytes = drObj.avgTransfBytes / drObj.count;
             drObj.avgReqCount = drObj.avgReqCount / drObj.count;
