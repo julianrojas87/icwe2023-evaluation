@@ -43,13 +43,7 @@ async function run() {
                 // Execute query
                 const sp = await executeQuery(planner, q, timeout);
 
-                // Timeout reached
-                if (!sp) {
-                    results.globals.totalTimeouts++;
-                    continue;
-                }
-
-                const metadata = sp.metadata;
+                const metadata = sp ? sp.metadata : { timeout: true };
                 metadata.from = q.from;
                 metadata.to = q.to;
                 // Keep original Dijkstra Rank 
@@ -78,22 +72,30 @@ async function run() {
     for (const qr of results.queryResults) {
         if (qr) {
             for (const r of qr) {
-                total++;
-                // Aggregate response times
-                results.globals.fullAvgResTime += r.executionTime;
-                // Aggregate transferred bytes
-                results.globals.fullAvgTransfBytes += r.byteCount;
-                // Aggregate response times per Dijkstra Rank
+                // Initialize Dijkstra Rank specific report
                 if (!results.globals.dijkstraRanks[r.dijkstraRank]) {
                     results.globals.dijkstraRanks[r.dijkstraRank] = {
-                        count: 1,
-                        avgResTime: r.executionTime,
-                        avgTransfBytes: r.byteCount,
-                        avgReqCount: r.requestCount,
-                        avgCacheHits: r.cacheHits,
-                        avgDistance: r.cost
+                        timeouts: 0,
+                        count: 0,
+                        avgResTime: 0,
+                        avgTransfBytes: 0,
+                        avgReqCount: 0,
+                        avgCacheHits: 0,
+                        avgDistance: 0
                     }
+                }
+
+                // Check if result is a timeout
+                if (r.timeout) {
+                    results.globals.totalTimeouts++;
+                    results.globals.dijkstraRanks[r.dijkstraRank].timeouts++;
                 } else {
+                    total++;
+                    // Aggregate response times
+                    results.globals.fullAvgResTime += r.executionTime;
+                    // Aggregate transferred bytes
+                    results.globals.fullAvgTransfBytes += r.byteCount;
+                    // Aggregate response times per Dijkstra Rank
                     results.globals.dijkstraRanks[r.dijkstraRank].count++;
                     results.globals.dijkstraRanks[r.dijkstraRank].avgResTime += r.executionTime;
                     results.globals.dijkstraRanks[r.dijkstraRank].avgTransfBytes += r.byteCount;
@@ -104,18 +106,23 @@ async function run() {
             }
         }
     }
+
     // Calculate averages
-    results.globals.fullAvgResTime = results.globals.fullAvgResTime / total;
-    results.globals.fullAvgTransfBytes = results.globals.fullAvgTransfBytes / total;
     results.globals.totalTimeouts = results.globals.totalTimeouts / iterations;
+    if (total > 0) {
+        results.globals.fullAvgResTime = results.globals.fullAvgResTime / total;
+        results.globals.fullAvgTransfBytes = results.globals.fullAvgTransfBytes / total;
+    }
     // Calculate averages per Dijkstra rank
     Object.keys(results.globals.dijkstraRanks).forEach(dr => {
         const drObj = results.globals.dijkstraRanks[dr];
-        drObj.avgResTime = drObj.avgResTime / drObj.count;
-        drObj.avgTransfBytes = drObj.avgTransfBytes / drObj.count;
-        drObj.avgReqCount = drObj.avgReqCount / drObj.count;
-        drObj.avgCacheHits = drObj.avgCacheHits / drObj.count;
-        drObj.avgDistance = drObj.avgDistance / drObj.count;
+        if (drObj > 0) {
+            drObj.avgResTime = drObj.avgResTime / drObj.count;
+            drObj.avgTransfBytes = drObj.avgTransfBytes / drObj.count;
+            drObj.avgReqCount = drObj.avgReqCount / drObj.count;
+            drObj.avgCacheHits = drObj.avgCacheHits / drObj.count;
+            drObj.avgDistance = drObj.avgDistance / drObj.count;
+        }
     });
 
     console.log(results.globals);
@@ -133,7 +140,7 @@ function executeQuery(planner, q, timeout) {
 
         // Run query
         planner.findPath(q.from, q.to).then(sp => {
-            if(limit) clearTimeout(limit);
+            if (limit) clearTimeout(limit);
             resolve(sp);
         }).catch(err => reject(err));
     });
