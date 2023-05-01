@@ -7,6 +7,7 @@ import readline from "readline";
 import jsonlParser from "stream-json/jsonl/Parser.js";
 import { fetch as nodeFetch } from "undici";
 import { Worker } from "worker_threads";
+import autocannon from 'autocannon';
 
 // Handle older Node.js versions (<18)
 if (typeof fetch === "undefined") fetch = nodeFetch;
@@ -20,7 +21,7 @@ const CLIENTS = [1, 2, 4, 8, 16, 32, 64, 128];
 // Valid Graph Storage types
 const GRAPH_STORAGES = ["virtuoso", "graphdb", "osrm"];
 // Valid Tiles Interface types
-const TILES_INTERFACES = ["sparql", "cypher"];
+const TILES_INTERFACES = ["none", "sparql", "cypher"];
 // Query timeout
 const TIMEOUT = 60000;
 
@@ -29,7 +30,7 @@ async function run() {
         .requiredOption("--experiment <experiment>", "Type of experiment (scalability, performance)")
         .requiredOption("--gs-type <gsType>", "Graph Storage type to be tested (graphdb, virtuoso, osrm, stardog, neo4j)")
         .requiredOption("--gs-address <gsAddress>", "Graph Storage server address")
-        .option("--ti-type <tiType>", "Tiles Interface type (sparql, cypher) (if any)")
+        .option("--ti-type <tiType>", "Tiles Interface type (sparql, cypher) (if any)", "none")
         .option("--ti-address <tiAddress>", "Tiles Interface server address (if any)")
         .option("--zoom <zoom>", "Zoom level to use on the Tiles Interface", 12)
         .option("--iterations <iterations>", "Number of repetitions of the query set", 1)
@@ -56,9 +57,9 @@ async function run() {
 
     if (program.opts().experiment === "performance") {
         // *******  RUN PERFORMANCE EXPERIMENT *******
-        if (program.opts().tiType) {
+        if (program.opts().tiType && program.opts().tiType !== "none") {
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST FOR A TILES INTERFACE OVER ${program.opts().gsType.toUpperCase()} ---------`);
-            // Testing with a Tiles Planner instance
+            // Execute test with a Tiles Planner instance
             const results = await runTilesPlanner({
                 gsType: program.opts().gsType,
                 ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
@@ -71,11 +72,11 @@ async function run() {
             });
 
             // Persist results to disk
-            if (!fs.existsSync(path.resolve("./results"))) {
-                fs.mkdirSync(path.resolve("./results"));
+            if (!fs.existsSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}`))) {
+                fs.mkdirSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}`));
             }
 
-            const fileName = "tiles_" 
+            const fileName = "tiles_"
                 + program.opts().gsType + "_"
                 + "zoom-" + program.opts().zoom + "_"
                 + (program.opts().disableClientCache ? "no-client-cache" : "client-cache") + "_"
@@ -83,13 +84,27 @@ async function run() {
                 + ".json";
 
             await fsPromise.writeFile(
-                path.resolve("./results/", fileName),
+                path.resolve(`./results/performance/tiles/${program.opts().gsType}/`, fileName),
                 JSON.stringify(results, null, 3),
                 "utf8"
             );
         } else {
             // Testing with an autocannon instance
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
+            // Prepare queries for autocannon according to the target graph store
+            const preparedReqs = prepareAPIRequests(querySet, program.opts().gsType);
+            // Execute test with autocannon
+            const result = await autocannon({
+                url: `http://${program.opts().gsAddress}:3000`,
+                connections: 1,
+                workers: 1,
+                amount: program.opts().iterations * querySet.length, // repeat query set {iterations} times
+                timeout: 60, // 60 seconds timeout for every query
+                requests: preparedReqs
+            });
+
+            console.log(result);
+
         }
     } else {
         // *******  RUN SCALABILITY EXPERIMENT *******
@@ -157,6 +172,21 @@ function loadHttpReqs() {
                 }
             }).on("close", () => resolve(reqs))
             .on("error", err => reject(err));
+    });
+}
+
+function prepareAPIRequests(queries, graphStore) {
+    return queries.map(q => {
+        let path;
+
+        if (graphStore === "osrm") {
+            path = `/osrm?path=${q.from.coordinates.join(",")};${q.to.coordinates.join(",")}`;
+        }
+        
+        return {
+            method: "GET",
+            path
+        };
     });
 }
 

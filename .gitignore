@@ -7,4 +7,4 @@ graph-database/stardog/home
 !random-queries_5-17.json.gz
 !requests.log.gz
 !graph-database/stardog/home/stardog-license-key.bin
-!client/results/*.gz
+!client/results/**/*.gz
