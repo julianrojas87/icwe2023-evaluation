@@ -58,7 +58,7 @@ async function run() {
     if (program.opts().experiment === "performance") {
         // *******  RUN PERFORMANCE EXPERIMENT *******
         if (program.opts().tiType && program.opts().tiType !== "none") {
-            console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST FOR A TILES INTERFACE OVER ${program.opts().gsType.toUpperCase()} ---------`);
+            console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST FOR A TILES INTERFACE OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
             // Execute test with a Tiles Planner instance
             const results = await runTilesPlanner({
                 gsType: program.opts().gsType,
@@ -103,12 +103,15 @@ async function run() {
                 requests: preparedReqs
             });
 
-            console.log(result);
-
+            await fsPromise.writeFile(
+                path.resolve(`./results/performance/${program.opts().gsType}/`, "result.json"),
+                JSON.stringify(result, null, 3),
+                "utf8"
+            );
         }
     } else {
         // *******  RUN SCALABILITY EXPERIMENT *******
-        for (let i = 0; i < 1/*CLIENTS.length*/; i++) {
+        for (let i = 0; i < CLIENTS.length; i++) {
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST WITH ${CLIENTS[i]} concurrent clients---------`);
             // Start recording of stats in remote servers
             if (program.opts().record) {
@@ -144,6 +147,7 @@ async function run() {
             });
         }
     }
+    console.log("-----------------TEST COMPLETED SUCCESSFULLY----------------");
 }
 
 function loadQuerySet() {
@@ -182,7 +186,7 @@ function prepareAPIRequests(queries, graphStore) {
         if (graphStore === "osrm") {
             path = `/osrm?path=${q.from.coordinates.join(",")};${q.to.coordinates.join(",")}`;
         }
-        
+
         return {
             method: "GET",
             path
