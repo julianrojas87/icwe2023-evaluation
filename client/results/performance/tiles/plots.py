@@ -1,10 +1,7 @@
-import matplotlib
-from matplotlib import pyplot as plt
-from matplotlib.ticker import FixedLocator
 import gzip
 import json
-
 import numpy as np
+from matplotlib import pyplot as plt
 
 # Function to calculate Y-axis (average response time) values
 def get_response_times(z, server, cache):
