@@ -4,7 +4,7 @@
 
 # Importing data into Virtuoso
 
-1. Go to Virtuoso conductor: `http://virtuoso_ip_address:8890/conductor` and Login with DBA credentials. Then go to `Database/Interactive SQL` menu option.
+1. Go to Virtuoso conductor: `http://virtuoso_ip_address:8890/conductor` and Login with DBA credentials (by default dba:dba). Then go to `Database/Interactive SQL` menu option.
 
 2. Register source data folder (the named graph URI parameter is not important here since it is overwritten by the `global.graph` config file created with `start-virtuoso.sh` script):
 

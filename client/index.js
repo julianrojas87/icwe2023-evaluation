@@ -17,13 +17,11 @@ const RANDOM_QUERY_SET = "../random-queries_5-17.json.gz";
 // HTTP request log
 const REQUEST_LOG = "../requests.log.gz";
 // Amount of concurrent clients
-const CLIENTS = [1, 2, 4, 8, 16, 32, 64, 128];
+const CLIENTS = [2, 4, 8, 16, 32, 64, 128];
 // Valid Graph Storage types
 const GRAPH_STORAGES = ["virtuoso", "graphdb", "osrm"];
 // Valid Tiles Interface types
 const TILES_INTERFACES = ["none", "sparql", "cypher"];
-// Query timeout
-const TIMEOUT = 60000;
 
 async function run() {
     const program = new Command()
@@ -37,6 +35,7 @@ async function run() {
         .option("--disable-client-cache", "Disable client-side cache", false)
         .option("--bypass-server-cache", "Bypass server-side cache", false)
         .option("--record", "Flag to trigger stats recording")
+        .option("--timeout", "Timeout limit for aborting a query", 60000)
         .parse(process.argv);
 
     // Validate Graph Storage type
@@ -50,6 +49,9 @@ async function run() {
         process.exit();
     }
 
+    // Query timeout
+    const TIMEOUT = program.opts().timeout;
+
     // Load the query set
     const querySet = (await loadQuerySet());
     // Load the set of HTTP requests that autocannon will execute as a Tiles Planner would do
@@ -60,7 +62,7 @@ async function run() {
         if (program.opts().tiType && program.opts().tiType !== "none") {
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST FOR A TILES INTERFACE OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
             // Execute test with a Tiles Planner instance
-            const results = await runTilesPlanner({
+            const result = await runTilesPlanner({
                 gsType: program.opts().gsType,
                 ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
                 zoom: program.opts().zoom,
@@ -72,8 +74,8 @@ async function run() {
             });
 
             // Persist results to disk
-            if (!fs.existsSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}`))) {
-                fs.mkdirSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}`));
+            if (!fs.existsSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`))) {
+                fs.mkdirSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`));
             }
 
             const fileName = "tiles_"
@@ -85,7 +87,7 @@ async function run() {
 
             await fsPromise.writeFile(
                 path.resolve(`./results/performance/tiles/${program.opts().gsType}/`, fileName),
-                JSON.stringify(results, null, 3),
+                JSON.stringify(result, null, 3),
                 "utf8"
             );
         } else {
@@ -111,6 +113,51 @@ async function run() {
         }
     } else {
         // *******  RUN SCALABILITY EXPERIMENT *******
+        if (program.opts().tiType && program.opts().tiType !== "none") {
+            for (let i = 0; i < CLIENTS.length; i++) {
+                console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST WITH ${CLIENTS[i]} concurrent clients---------`);
+
+                // Start recording of stats in remote servers
+                if (program.opts().record) {
+                    await toggleRecording({
+                        record: true,
+                        server: program.opts().tiAddress,
+                        module: "tiles",
+                        clients: i
+                    });
+                }
+
+                // Wait 5 seconds before running clients
+                await wait(5000);
+
+                // Launch autocannon
+                const loadGenerator = autocannon({
+                    url: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
+                    connections: CLIENTS[i] - 1,
+                    workers: CLIENTS[i] > 16 ? 16 : CLIENTS[i],
+                    pipelining: CLIENTS[i] > 16 ? CLIENTS[i] / 16 : 1,
+                    connectionRate: 5,
+                    duration: 86400, // Set a very long time so autocannon does not stop in the middle of the test
+                    requests: httpReqs
+                });
+
+                // Execute test with a Tiles Planner instance
+                const result = await runTilesPlanner({
+                    gsType: program.opts().gsType,
+                    ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
+                    zoom: program.opts().zoom,
+                    disableClientCache: program.opts().disableClientCache,
+                    bypassServerCache: program.opts().bypassServerCache,
+                    iterations: program.opts().iterations,
+                    timeout: TIMEOUT,
+                    querySet
+                });
+            }
+        } else {
+            // Prepare queries for autocannon according to the target graph store
+            const preparedReqs = prepareAPIRequests(querySet, program.opts().gsType);
+        }
+
         for (let i = 0; i < CLIENTS.length; i++) {
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST WITH ${CLIENTS[i]} concurrent clients---------`);
             // Start recording of stats in remote servers
@@ -120,7 +167,7 @@ async function run() {
                         record: true,
                         server: program.opts().tiAddress,
                         module: "tiles",
-                        clients: i
+                        clients: CLIENTS[i]
                     });
                 }
 
@@ -133,7 +180,7 @@ async function run() {
             }
 
             // Wait 5 seconds before running clients
-            //await wait(5000);
+            await wait(5000);
 
             // Run an instance of the Tiles Planner in an independent thread
             await runTilesPlanner({
@@ -196,7 +243,7 @@ function prepareAPIRequests(queries, graphStore) {
 
 async function toggleRecording({ record, server, module, clients }) {
     if (record) {
-        await fetch(`http://${server}:3001?command=start&module=${module}&clients=${CLIENTS[clients]}`);
+        await fetch(`http://${server}:3001?command=start&module=${module}&clients=${clients}`);
     } else {
         await fetch(`http://${server}:3001?command=stop`);
     }
