@@ -35,7 +35,7 @@ async function run() {
         .option("--disable-client-cache", "Disable client-side cache", false)
         .option("--bypass-server-cache", "Bypass server-side cache", false)
         .option("--record", "Flag to trigger stats recording")
-        .option("--timeout", "Timeout limit for aborting a query", 60000)
+        .option("--timeout <timeout>", "Timeout limit for aborting a query", 60000)
         .parse(process.argv);
 
     // Validate Graph Storage type
@@ -50,8 +50,7 @@ async function run() {
     }
 
     // Query timeout
-    const TIMEOUT = program.opts().timeout;
-
+    const TIMEOUT = parseInt(program.opts().timeout);
     // Load the query set
     const querySet = (await loadQuerySet());
     // Load the set of HTTP requests that autocannon will execute as a Tiles Planner would do
@@ -86,7 +85,7 @@ async function run() {
                 + ".json";
 
             await fsPromise.writeFile(
-                path.resolve(`./results/performance/tiles/${program.opts().gsType}/`, fileName),
+                path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`, fileName),
                 JSON.stringify(result, null, 3),
                 "utf8"
             );
