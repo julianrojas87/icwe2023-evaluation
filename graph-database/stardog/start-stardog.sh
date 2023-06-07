@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Download ERA KG
-if [ ! -f data/era-kg_04-02-2023.nt.gz ]
+if [ ! -f data/era-kg-v2.5.0.nq.gz ]
 then
     mkdir data
     cd data
-    wget -O era-kg_04-02-2023.nt.gz https://cloud.ilabt.imec.be/index.php/s/BMa4rdDoE4jKMq2/download/era-kg_04-02-2023.nt.gz
+    wget -O era-kg-v2.5.0.nq.gz https://cloud.ilabt.imec.be/index.php/s/tx7wjSEWEYeWL92/download/era-kg-v2.5.0.nq.gz
     cd ..
 fi
 
