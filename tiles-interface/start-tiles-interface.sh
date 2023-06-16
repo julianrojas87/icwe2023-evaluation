@@ -9,4 +9,4 @@ then
 fi
 
 cd source-code
-sudo docker-compose up --build -d
+sudo docker-compose --compatibility up --build -d
