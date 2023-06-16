@@ -10,6 +10,7 @@
   "author": "Julian Rojas",
   "license": "MIT",
   "dependencies": {
+    "@comunica/query-sparql": "^2.7.1",
     "commander": "^9.4.1",
     "tiles-planner": "github:julianrojas87/tiles-planner#icwe2023",
     "wellknown": "^0.5.0"

@@ -5,7 +5,7 @@ if [ ! -f data/era-kg-v2.5.0.nq.gz ]
 then
     mkdir data
     cd data
-    wget -O era-kg-v2.5.0.nq.gz https://cloud.ilabt.imec.be/index.php/s/tx7wjSEWEYeWL92/download/era-kg-v2.5.0.nq.gz
+    wget -O era-kg-v2.5.0.nq.gz https://cloud.ilabt.imec.be/index.php/s/dgrozb6BPyak5oP/download/era-kg-v2.5.0.nq.gz
     cd ..
 fi
 
