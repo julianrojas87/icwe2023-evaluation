@@ -13,7 +13,7 @@ then
     mkdir data
     mkdir data/graphdb-import
     cd data/graphdb-import
-    wget -O era-kg-v2.5.0.nq.gz https://cloud.ilabt.imec.be/index.php/s/dgrozb6BPyak5oP/download/era-kg-v2.5.0.nq.gz
+    wget -O era-kg-v2.5.0.nq.gz https://cloud.ilabt.imec.be/index.php/s/5WX8wpCf7T4KjyF/download/era-kg-v2.5.0.nq.gz
     cd ../..
 fi
 

@@ -5,7 +5,7 @@ if [ ! -f data/era-kg-v2.5.0.nq.gz ]
 then
     mkdir data
     cd data
-    wget -O era-kg-v2.5.0.nq.gz https://cloud.ilabt.imec.be/index.php/s/dgrozb6BPyak5oP/download/era-kg-v2.5.0.nq.gz
+    wget -O era-kg-v2.5.0.nq.gz https://cloud.ilabt.imec.be/index.php/s/5WX8wpCf7T4KjyF/download/era-kg-v2.5.0.nq.gz
     echo "http://data.europa.eu/949/graph/rinf" > global.graph
     cd ..
 fi
