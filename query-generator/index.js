@@ -83,14 +83,14 @@ async function loadIndex(graphStore, country) {
     const bindings = await (await comunica.queryBindings(`
         PREFIX era: <http://data.europa.eu/949/>
         PREFIX gsp: <http://www.opengis.net/ont/geosparql#>
+        PREFIX eu-country: <http://publications.europa.eu/resource/authority/country/>
 
         SELECT ?id ?label ?wkt WHERE {
             ?id a era:NetElement;
                ^era:elementPart [
                   era:hasImplementation [
                      era:opName ?label;
-                     era:inCountry ${country ? 
-                        `<http://publications.europa.eu/resource/authority/country/${country}>` : "?c"};
+                     era:inCountry ${country ? `eu-country:${country}` : "?c"};
                      gsp:hasGeometry [ gsp:asWKT ?wkt ]
                   ]
                ]
