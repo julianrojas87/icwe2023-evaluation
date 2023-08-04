@@ -3,7 +3,7 @@ node_modules
 *.zip
 graph-database/graphdb/data
 graph-database/stardog/home
-!era-index.json.gz
+!queries-per-country/*.gz
 !random-queries_5-17.json.gz
 !requests.log.gz
 !graph-database/stardog/home/stardog-license-key.bin
