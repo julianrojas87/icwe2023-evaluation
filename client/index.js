@@ -71,7 +71,7 @@ async function run() {
                     bypassServerCache: program.opts().bypassServerCache,
                     iterations: program.opts().iterations,
                     timeout: TIMEOUT,
-                    querySet: querySet[country].slice(0, 5)
+                    querySet: querySet[country]
                 });
 
                 // Persist results to disk
