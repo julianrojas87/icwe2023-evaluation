@@ -13,7 +13,7 @@ import autocannon from 'autocannon';
 if (typeof fetch === "undefined") fetch = nodeFetch;
 
 // Query set
-const RANDOM_QUERY_SET = "../random-queries_5-17.json.gz";
+const RANDOM_QUERIES = "../queries-per-country";
 // HTTP request log
 const REQUEST_LOG = "../requests.log.gz";
 // Amount of concurrent clients
@@ -59,36 +59,40 @@ async function run() {
     if (program.opts().experiment === "performance") {
         // *******  RUN PERFORMANCE EXPERIMENT *******
         if (program.opts().tiType && program.opts().tiType !== "none") {
-            console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST FOR A TILES INTERFACE OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
-            // Execute test with a Tiles Planner instance
-            const result = await runTilesPlanner({
-                gsType: program.opts().gsType,
-                ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
-                zoom: program.opts().zoom,
-                disableClientCache: program.opts().disableClientCache,
-                bypassServerCache: program.opts().bypassServerCache,
-                iterations: program.opts().iterations,
-                timeout: TIMEOUT,
-                querySet
-            });
+            console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST FOR A TILE INTERFACE OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
+            for (const country of Object.keys(querySet)) {
+                console.log(`*********TESTING OVER COUNTRY: ${country}`);
+                // Execute test with a Tiles Planner instance
+                const result = await runTilesPlanner({
+                    gsType: program.opts().gsType,
+                    ti: `http://${program.opts().tiAddress}:8080/${program.opts().tiType}/${program.opts().gsType}`,
+                    zoom: program.opts().zoom,
+                    disableClientCache: program.opts().disableClientCache,
+                    bypassServerCache: program.opts().bypassServerCache,
+                    iterations: program.opts().iterations,
+                    timeout: TIMEOUT,
+                    querySet: querySet[country].slice(0, 5)
+                });
 
-            // Persist results to disk
-            if (!fs.existsSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`))) {
-                fs.mkdirSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`));
+                // Persist results to disk
+                if (!fs.existsSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`))) {
+                    fs.mkdirSync(path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`));
+                }
+
+                const fileName = "tiles_"
+                    + program.opts().gsType + "_"
+                    + "zoom-" + program.opts().zoom + "_"
+                    + (program.opts().disableClientCache ? "no-client-cache" : "client-cache") + "_"
+                    + (program.opts().bypassServerCache ? "no-server-cache" : "server-cache") + "_"
+                    + country
+                    + ".json";
+
+                await fsPromise.writeFile(
+                    path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`, fileName),
+                    JSON.stringify(result, null, 3),
+                    "utf8"
+                );
             }
-
-            const fileName = "tiles_"
-                + program.opts().gsType + "_"
-                + "zoom-" + program.opts().zoom + "_"
-                + (program.opts().disableClientCache ? "no-client-cache" : "client-cache") + "_"
-                + (program.opts().bypassServerCache ? "no-server-cache" : "server-cache")
-                + ".json";
-
-            await fsPromise.writeFile(
-                path.resolve(`./results/performance/tiles/${program.opts().gsType}/${TIMEOUT}`, fileName),
-                JSON.stringify(result, null, 3),
-                "utf8"
-            );
         } else {
             // Testing with an autocannon instance
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
@@ -197,16 +201,21 @@ async function run() {
 }
 
 function loadQuerySet() {
-    return new Promise((resolve, reject) => {
-        const set = [];
-        fs.createReadStream(path.resolve(RANDOM_QUERY_SET))
-            .pipe(createGunzip())
-            .pipe(jsonlParser.parser())
-            .on("data", q => {
-                set.push(q.value);
-            })
-            .on("error", err => reject(err))
-            .on("end", () => resolve(set));
+    return new Promise(async (resolve, reject) => {
+        const countries = await fsPromise.readdir(RANDOM_QUERIES);
+        const set = {};
+        for (const country of countries) {
+            set[country.split(".")[0]] = [];
+
+            fs.createReadStream(path.resolve(`${RANDOM_QUERIES}/${country}`))
+                .pipe(createGunzip())
+                .pipe(jsonlParser.parser())
+                .on("data", q => {
+                    set[country.split(".")[0]].push(q.value);
+                })
+                .on("error", err => reject(err))
+                .on("end", () => resolve(set));
+        }
     });
 }
 

@@ -10,10 +10,10 @@
   "author": "Julián Rojas",
   "license": "MIT",
   "dependencies": {
-    "autocannon": "^7.10.0",
+    "autocannon": "^7.12.0",
     "commander": "^10.0.0",
-    "stream-json": "^1.7.5",
+    "stream-json": "^1.8.0",
     "tiles-planner": "github:julianrojas87/tiles-planner#icwe2023",
-    "undici": "^5.18.0"
+    "undici": "^5.23.0"
   }
 }
