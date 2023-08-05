@@ -20,6 +20,7 @@ async function run() {
     const minRank = parseInt(program.opts().minRank);
     const maxRank = parseInt(program.opts().maxRank);
     const queryAmount = parseInt(program.opts().queryAmount);
+    const country = program.opts().country || null;
     
     // Create index of graph nodes from graph store
     const index = await loadIndex(program.opts().graphStore, program.opts().country);
@@ -51,6 +52,11 @@ async function run() {
                 console.log(`Finding route number ${j} for Dijkstra Rank ${DijkstraRank} from ${randomNode.label}...`)
                 const sp = await planner.findPath(randomNode, undefined, DijkstraRank);
                 if (sp) {
+                    // Ignore route if destination node is not within the same country as origin node
+                    if(country && !index.has(sp.path[sp.path.length - 1].id)) {
+                        j--;
+                        continue;
+                    }
                     // Clean up and complement query and result
                     sp.path.forEach(n => {
                         delete n.nextNodes;
