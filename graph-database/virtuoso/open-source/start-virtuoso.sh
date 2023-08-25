@@ -11,5 +11,5 @@ then
 fi
 
 # Start Virtuoso Docker container
-sudo docker pull openlink/virtuoso-closedsource-8
-sudo docker run --name virtuoso --env DBA_PASSWORD=dba -p 1111:1111 -p 8890:8890 -v `pwd`:/database -d openlink/virtuoso-closedsource-8:latest
+sudo docker pull openlink/virtuoso-opensource-7
+sudo docker run --name virtuoso-os --env DBA_PASSWORD=dba -p 1112:1111 -p 8891:8890 -v `pwd`:/database openlink/virtuoso-opensource-7:latest

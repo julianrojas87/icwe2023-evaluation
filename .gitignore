@@ -1,8 +1,13 @@
 node_modules
+**/data/*
 *.gz
 *.zip
 graph-database/graphdb/data
 graph-database/stardog/home
+graph-database/virtuoso/**/*.db
+graph-database/virtuoso/**/*.log
+graph-database/virtuoso/**/*.pxa
+graph-database/virtuoso/**/*.trx
 !queries-per-country/*.gz
 !random-queries_5-17.json.gz
 !requests.log.gz
