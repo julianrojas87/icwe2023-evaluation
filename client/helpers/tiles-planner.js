@@ -40,10 +40,18 @@ async function run() {
         for (const [j, q] of querySet.entries()) {
             try {
                 console.log(`Q${j}`);
+
+                if (!bypassServerCache) {
+                    // Execute the query once first if the server-cache is enabled
+                    // to guarantee that the tiles are cached by the tile-interface
+                    await executeQuery(planner, q, timeout);
+                    cleanClient(planner);
+                }
+
                 // Execute query
                 const sp = await executeQuery(planner, q, timeout);
 
-                const metadata = sp ? sp.metadata : { timeout: true };
+                const metadata = sp ? sp.metadata : { executionTime: timeout, timeout: true };
                 metadata.from = q.from;
                 metadata.to = q.to;
                 // Keep original Dijkstra Rank 
@@ -56,10 +64,9 @@ async function run() {
                     results.queryResults[j].push(metadata);
                 }
 
-                // Clean up in-memory network graph and tiles cache if cache is disabled
+                // Clean up in-memory network graph and tiles cache if client cache is disabled
                 if (disableClientCache) {
-                    planner.NG = new NetworkGraph();
-                    planner.tileCache = new Set();
+                    cleanClient(planner);
                 }
             } catch (err) {
                 console.error(j, err);
@@ -89,6 +96,9 @@ async function run() {
                 if (r.timeout) {
                     results.globals.totalTimeouts++;
                     results.globals.dijkstraRanks[r.dijkstraRank].timeouts++;
+                    // Still add the timeout as a response time for aggregation
+                    results.globals.dijkstraRanks[r.dijkstraRank].count++;
+                    results.globals.dijkstraRanks[r.dijkstraRank].avgResTime += r.executionTime;
                 } else {
                     total++;
                     // Aggregate response times
@@ -144,6 +154,11 @@ function executeQuery(planner, q, timeout) {
             resolve(sp);
         }).catch(err => reject(err));
     });
+}
+
+function cleanClient(planner) {
+    planner.NG = new NetworkGraph();
+    planner.tileCache = new Set();
 }
 
 run();
