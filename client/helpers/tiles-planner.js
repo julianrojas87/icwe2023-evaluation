@@ -51,7 +51,7 @@ async function run() {
                 // Execute query
                 const sp = await executeQuery(planner, q, timeout);
 
-                const metadata = sp ? sp.metadata : { executionTime: timeout, timeout: true };
+                const metadata = sp ? sp.metadata : { timeout: true };
                 metadata.from = q.from;
                 metadata.to = q.to;
                 // Keep original Dijkstra Rank 
@@ -96,9 +96,6 @@ async function run() {
                 if (r.timeout) {
                     results.globals.totalTimeouts++;
                     results.globals.dijkstraRanks[r.dijkstraRank].timeouts++;
-                    // Still add the timeout as a response time for aggregation
-                    results.globals.dijkstraRanks[r.dijkstraRank].count++;
-                    results.globals.dijkstraRanks[r.dijkstraRank].avgResTime += r.executionTime;
                 } else {
                     total++;
                     // Aggregate response times
