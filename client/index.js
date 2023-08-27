@@ -27,7 +27,7 @@ async function run() {
     const program = new Command()
         .requiredOption("--experiment <experiment>", "Type of experiment (scalability, performance)")
         .requiredOption("--gs-type <gsType>", "Graph Storage type to be tested (graphdb, virtuoso, osrm, stardog, neo4j)")
-        .requiredOption("--gs-address <gsAddress>", "Graph Storage server address")
+        .option("--gs-address <gsAddress>", "Graph Storage server address")
         .option("--ti-type <tiType>", "Tiles Interface type (sparql, cypher) (if any)", "none")
         .option("--ti-address <tiAddress>", "Tiles Interface server address (if any)")
         .option("--zoom <zoom>", "Zoom level to use on the Tiles Interface", 12)
@@ -36,6 +36,7 @@ async function run() {
         .option("--bypass-server-cache", "Bypass server-side cache", false)
         .option("--record", "Flag to trigger stats recording")
         .option("--timeout <timeout>", "Timeout limit for aborting a query", 60000)
+        .option("--country <country>", "Run the evaluation for a specific country only")
         .parse(process.argv);
 
     // Validate Graph Storage type
@@ -52,16 +53,18 @@ async function run() {
     // Query timeout
     const TIMEOUT = parseInt(program.opts().timeout);
     // Load the query set
-    const querySet = (await loadQuerySet());
+    const querySet = (await loadQuerySet(program.opts().country));
     // Load the set of HTTP requests that autocannon will execute as a Tiles Planner would do
-    const httpReqs = await loadHttpReqs();
+    //const httpReqs = await loadHttpReqs();
 
     if (program.opts().experiment === "performance") {
         // *******  RUN PERFORMANCE EXPERIMENT *******
         if (program.opts().tiType && program.opts().tiType !== "none") {
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST FOR A TILE INTERFACE OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
+
             for (const country of Object.keys(querySet)) {
                 console.log(`*********TESTING OVER COUNTRY: ${country}`);
+
                 // Execute test with a Tiles Planner instance
                 const result = await runTilesPlanner({
                     gsType: program.opts().gsType,
@@ -94,6 +97,10 @@ async function run() {
                 );
             }
         } else {
+            if(!program.opts().gsAddress) {
+                console.error("Please provide a valid IP address for the Graph Storage server with --gsAddress");
+                process.exit();
+            }
             // Testing with an autocannon instance
             console.log(`---------RUNNING ${program.opts().experiment.toUpperCase()} TEST OVER A ${program.opts().gsType.toUpperCase()} INSTANCE ---------`);
             // Prepare queries for autocannon according to the target graph store
@@ -200,9 +207,9 @@ async function run() {
     console.log("-----------------TEST COMPLETED SUCCESSFULLY----------------");
 }
 
-function loadQuerySet() {
+function loadQuerySet(country) {
     return new Promise(async (resolve, reject) => {
-        const countries = await fsPromise.readdir(RANDOM_QUERIES);
+        const countries = country ? [`${country}.json.gz`] : await fsPromise.readdir(RANDOM_QUERIES);
         const set = {};
         for (const country of countries) {
             set[country.split(".")[0]] = [];
