@@ -1,3 +1,4 @@
+import sys
 import gzip
 import json
 import numpy as np
@@ -6,7 +7,7 @@ from matplotlib import pyplot as plt
 
 # Config variables
 graph_storage = "virtuoso"
-country = "FRA"
+country = sys.argv[1]
 timeout = "120000"
 
 
@@ -34,6 +35,7 @@ fig, ((ax1, ax2)) = plt.subplots(1, 2)
 lw = 2
 x_axis = [2**5, 2**6, 2**7, 2**8, 2**9, 2**10, 2**11, 2**12, 2**13, 2**14, 2**15, 2**16, 2**17]
 
+fig.suptitle(country, fontsize=28)
 # Plot results with server cache
 for z in range(6, 12):
     x, y, timeouts = get_response_times(z, graph_storage, timeout, country, True)

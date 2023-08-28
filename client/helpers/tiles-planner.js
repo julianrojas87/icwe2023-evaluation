@@ -19,7 +19,7 @@ async function run() {
         zoom,
         tilesBaseURL: ti,
         distance: (node) => { return node.cost },
-        heuristic: Utils.harvesineDistance,
+        heuristic: Utils.haversineDistance,
         bypassServerCache
     });
 

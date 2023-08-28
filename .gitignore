@@ -8,6 +8,7 @@ graph-database/virtuoso/**/*.db
 graph-database/virtuoso/**/*.log
 graph-database/virtuoso/**/*.pxa
 graph-database/virtuoso/**/*.trx
+graph-database/virtuoso/**/*.lck
 !queries-per-country/*.gz
 !random-queries_5-17.json.gz
 !requests.log.gz
